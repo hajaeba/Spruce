@@ -192,3 +192,22 @@ button:hover {
   clear: both;
   display: table;
 }
+
+.signout-btn {
+    width: 100px;
+    height: 40px;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    margin-top: 13px;
+    margin-left: 15px;
+    font-size: 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s ease;
+}
+
+.signout-btn:hover {
+    background: #c0392b;
+}
