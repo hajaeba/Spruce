@@ -47,7 +47,34 @@
 
 
 
-        <form action="action_page.php" class="signup-form">
+        
+<form id="changePwForm" class="signup-form" novalidate>
+  <div class="container">
+    <h1>Change Password</h1>
+    <p>Update your password below. (Demo only — not connected to a database.)</p>
+    <hr>
+
+    <label for="current"><b>Current Password</b></label>
+    <input id="current" type="password" placeholder="Enter current password" name="current" required>
+
+    <label for="newpw"><b>New Password</b></label>
+    <input id="newpw" type="password" placeholder="Enter new password (min 8 chars)" name="newpw" minlength="8" required>
+
+    <label for="confirm"><b>Confirm New Password</b></label>
+    <input id="confirm" type="password" placeholder="Re-enter new password" name="confirm" required>
+
+    <div id="pwFeedback" role="status" aria-live="polite" style="min-height:1.2em;margin:6px 0 2px 0;"></div>
+
+    <div class="clearfix">
+      <button type="button" class="cancelbtn" id="cancelPw">Cancel</button>
+      <button type="submit" class="signupbtn" id="submitPw">Update</button>
+    </div>
+    <p style="font-size:12px;margin-top:8px;opacity:.9">
+      This is a demo. No password is actually saved.
+    </p>
+  </div>
+</form>
+
   <div class="container">
     <h1>Create an Account</h1>
     <p>Please fill in this form to create an account.</p>
