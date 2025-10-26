@@ -99,23 +99,29 @@
     </div>
   </section>
 
-  <!-- Profile -->
-  <section id="view-profile" class="view">
-    <div class="container grid-2">
-      <div class="card">
-        <h2>My Profile</h2>
-        <form id="profileForm" class="stack">
-          <input name="displayName" placeholder="Display name" />
-          <textarea name="bio" rows="4" placeholder="Bio"></textarea>
-          <button class="btn">Save</button>
-        </form>
-      </div>
-      <div>
-        <h2>My Posts</h2>
-        <ul id="myPosts" class="stack"></ul>
-      </div>
+  <div class="card">
+  <h2>My Profile</h2>
+  <form id="profileForm" class="stack">
+    <div class="row" style="align-items:center">
+      <img id="avatarPreview" src="" width="64" height="64" style="border-radius:50%;object-fit:cover;background:#222">
+      <input id="avatarInput" type="file" accept="image/*" style="max-width:240px">
     </div>
-  </section>
+    <div class="row">
+      <div class="card" style="flex:1">Followers: <b id="followerCount">0</b></div>
+      <div class="card" style="flex:1">Following: <b id="followingCount">0</b></div>
+    </div>
+    <input name="displayName" placeholder="Display name" />
+    <textarea name="bio" rows="4" placeholder="Bio"></textarea>
+    <button class="btn">Save</button>
+  </form>
+</div>
+
+  <section id="view-user" class="view">
+  <div class="container">
+    <div id="userContainer" class="stack"></div>
+  </div>
+</section>
+
 
   <!-- About / Resources (static stubs for now) -->
   <section id="view-about" class="view">
@@ -135,6 +141,21 @@
       </ul>
     </div>
   </section>
+
+  <section id="view-search" class="view">
+  <div class="container">
+    <h2>Search</h2>
+    <form id="globalSearchForm" class="row card">
+      <input id="globalSearchInput" placeholder="Search posts and people…" />
+      <button class="btn">Search</button>
+    </form>
+    <h3>Posts</h3>
+    <ul id="searchPosts" class="stack"></ul>
+    <h3>People</h3>
+    <ul id="searchUsers" class="stack"></ul>
+  </div>
+</section>
+
 
   <!-- Reset standalone view (if navigated directly) -->
   <section id="view-reset" class="view">
