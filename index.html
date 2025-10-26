@@ -16,6 +16,8 @@
         <a data-route="#/about">About</a>
         <a data-route="#/resources">Resources</a>
         <a data-route="#/profile">Profile</a>
+        <a data-route="#/search">Search</a>
+        <a data-route="#/admin">Admin</a> <!-- visible always; guarded in JS -->
       </nav>
       <div class="nav-right">
         <form id="searchForm" class="search">
@@ -28,12 +30,12 @@
     </div>
   </header>
 
-  <!-- HERO + three-column layout (left auth, center hero, right change pw) -->
+  <!-- Landing -->
   <section id="view-landing" class="view active">
     <div class="container grid-3">
       <aside class="card">
         <h3>Create an Account</h3>
-        <form id="registerForm">
+        <form id="registerForm" class="stack">
           <input name="username" placeholder="Username" required />
           <input type="email" name="email" placeholder="Email" required />
           <input type="password" name="password" placeholder="Password" required minlength="6" />
@@ -46,7 +48,7 @@
         </form>
         <hr/>
         <h3>Login</h3>
-        <form id="loginForm">
+        <form id="loginForm" class="stack">
           <input name="username" placeholder="Email or Username" required />
           <input type="password" name="password" placeholder="Password" required />
           <button class="btn full">Login</button>
@@ -58,8 +60,8 @@
         <h1>Dallas College Students & Social Media Platform</h1>
         <p>
           Dallas College is one of the largest public, multi-campus community college systems in Texas.
-          It offers a wide range of programs, including associate and bachelor’s degrees, career certificates,
-          and customized training, across multiple physical campuses and online options.
+          It offers a wide range of programs including associate and bachelor’s degrees, career certificates,
+          and customized training, across multiple physical campuses and online.
         </p>
         <div class="hero-cta">
           <a class="btn" data-route="#/feed">Enter Feed</a>
@@ -70,11 +72,11 @@
       <aside class="card">
         <h3>Change Password</h3>
         <small class="muted">Demo only — saved in browser (no database).</small>
-        <form id="resetLookupForm">
+        <form id="resetLookupForm" class="stack">
           <input name="identity" placeholder="Username or Email" required />
           <button class="btn full">Find Account</button>
         </form>
-        <form id="resetConfirmForm" class="hidden">
+        <form id="resetConfirmForm" class="hidden stack">
           <p id="sqText" class="muted"></p>
           <input name="sa" placeholder="Answer" required />
           <input type="password" name="newPw" placeholder="New Password (min 6)" required minlength="6" />
@@ -87,7 +89,7 @@
     </div>
   </section>
 
-  <!-- Main Feed -->
+  <!-- Feed -->
   <section id="view-feed" class="view">
     <div class="container">
       <h2>Main Feed</h2>
@@ -99,31 +101,55 @@
     </div>
   </section>
 
-  <div class="card">
-  <h2>My Profile</h2>
-  <form id="profileForm" class="stack">
-    <div class="row" style="align-items:center">
-      <img id="avatarPreview" src="" width="64" height="64" style="border-radius:50%;object-fit:cover;background:#222">
-      <input id="avatarInput" type="file" accept="image/*" style="max-width:240px">
+  <!-- Profile -->
+  <section id="view-profile" class="view">
+    <div class="container grid-2">
+      <div class="card">
+        <h2>My Profile</h2>
+        <form id="profileForm" class="stack">
+          <div class="row" style="align-items:center">
+            <img id="avatarPreview" src="" width="64" height="64" style="border-radius:50%;object-fit:cover;background:#222">
+            <input id="avatarInput" type="file" accept="image/*" style="max-width:240px">
+          </div>
+          <div class="row">
+            <div class="card" style="flex:1">Followers: <b id="followerCount">0</b></div>
+            <div class="card" style="flex:1">Following: <b id="followingCount">0</b></div>
+          </div>
+          <input name="displayName" placeholder="Display name" />
+          <textarea name="bio" rows="4" placeholder="Bio"></textarea>
+          <button class="btn">Save</button>
+        </form>
+      </div>
+      <div>
+        <h2>My Posts</h2>
+        <ul id="myPosts" class="stack"></ul>
+      </div>
     </div>
-    <div class="row">
-      <div class="card" style="flex:1">Followers: <b id="followerCount">0</b></div>
-      <div class="card" style="flex:1">Following: <b id="followingCount">0</b></div>
-    </div>
-    <input name="displayName" placeholder="Display name" />
-    <textarea name="bio" rows="4" placeholder="Bio"></textarea>
-    <button class="btn">Save</button>
-  </form>
-</div>
+  </section>
 
+  <!-- View Other User -->
   <section id="view-user" class="view">
-  <div class="container">
-    <div id="userContainer" class="stack"></div>
-  </div>
-</section>
+    <div class="container">
+      <div id="userContainer" class="stack"></div>
+    </div>
+  </section>
 
+  <!-- Search (posts + people) -->
+  <section id="view-search" class="view">
+    <div class="container">
+      <h2>Search</h2>
+      <form id="globalSearchForm" class="row card">
+        <input id="globalSearchInput" placeholder="Search posts and people…" />
+        <button class="btn">Search</button>
+      </form>
+      <h3>Posts</h3>
+      <ul id="searchPosts" class="stack"></ul>
+      <h3>People</h3>
+      <ul id="searchUsers" class="stack"></ul>
+    </div>
+  </section>
 
-  <!-- About / Resources (static stubs for now) -->
+  <!-- About / Resources -->
   <section id="view-about" class="view">
     <div class="container">
       <h2>About</h2>
@@ -142,37 +168,42 @@
     </div>
   </section>
 
-  <section id="view-search" class="view">
-  <div class="container">
-    <h2>Search</h2>
-    <form id="globalSearchForm" class="row card">
-      <input id="globalSearchInput" placeholder="Search posts and people…" />
-      <button class="btn">Search</button>
-    </form>
-    <h3>Posts</h3>
-    <ul id="searchPosts" class="stack"></ul>
-    <h3>People</h3>
-    <ul id="searchUsers" class="stack"></ul>
-  </div>
-</section>
-
-
-  <!-- Reset standalone view (if navigated directly) -->
+  <!-- Reset stand-alone -->
   <section id="view-reset" class="view">
     <div class="container">
       <h2>Reset Password</h2>
       <p class="muted">Use the Change Password card on the landing page, or do it here:</p>
       <div class="grid-2">
-        <form id="resetLookupForm2" class="card">
+        <form id="resetLookupForm2" class="card stack">
           <input name="identity" placeholder="Username or Email" required />
           <button class="btn">Find Account</button>
         </form>
-        <form id="resetConfirmForm2" class="card hidden">
+        <form id="resetConfirmForm2" class="card hidden stack">
           <p id="sqText2" class="muted"></p>
           <input name="sa" placeholder="Answer" required />
           <input type="password" name="newPw" placeholder="New Password" required minlength="6" />
           <button class="btn">Reset</button>
         </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Admin -->
+  <section id="view-admin" class="view">
+    <div class="container stack">
+      <div id="reportBlock"></div>
+
+      <h3>Flagged Posts</h3>
+      <ul id="flaggedList" class="stack"></ul>
+
+      <h3>Users</h3>
+      <div class="card" style="overflow:auto">
+        <table style="width:100%; border-collapse:collapse">
+          <thead>
+            <tr><th>User</th><th>Status</th><th>Followers</th><th>Following</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="adminUsers"></tbody>
+        </table>
       </div>
     </div>
   </section>
