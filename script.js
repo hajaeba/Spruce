@@ -183,4 +183,77 @@ $id("registerForm").addEventListener("submit", e => {
 // post create
 $id("postForm").addEventListener("submit", e => {
   e.preventDefault(); const fd = new FormData(e.target);
-  try { Posts.create(fd.get("text").t
+  try { Posts.create(fd.get("text").trim()); e.target.reset(); renderFeed(); }
+  catch (err) { alert(err.message); }
+});
+
+// like / delete / comment
+document.body.addEventListener("click", e => {
+  const like = e.target.closest("[data-like]"); if (like) { Posts.like(like.dataset.like); renderFeed(); }
+  const del = e.target.closest("[data-del]"); if (del) { Posts.remove(del.dataset.del); renderFeed(); }
+});
+document.body.addEventListener("submit", e => {
+  if (e.target.matches('form[data-comment]')) {
+    e.preventDefault(); const fd = new FormData(e.target);
+    const text = (fd.get("text") || "").trim(); if (!text) return;
+    Posts.comment(e.target.getAttribute("data-comment"), text); renderFeed();
+  }
+});
+
+// profile save
+$id("profileForm").addEventListener("submit", e => {
+  e.preventDefault(); const fd = new FormData(e.target);
+  Auth.saveProfile({ displayName: fd.get("displayName").trim(), bio: fd.get("bio").trim() });
+  alert("Profile saved");
+});
+
+// reset (landing card)
+const resetState = { identity: null };
+$id("resetLookupForm").addEventListener("submit", e => {
+  e.preventDefault(); const idt = new FormData(e.target).get("identity").trim();
+  const u = Auth.findIdentity(idt); if (!u) return alert("No account found");
+  resetState.identity = (u.username || u.email);
+  $id("sqText").textContent = `Security question: ${u.sq}`;
+  $id("resetConfirmForm").classList.remove("hidden");
+});
+$id("resetConfirmForm").addEventListener("submit", e => {
+  e.preventDefault(); const fd = new FormData(e.target);
+  try { Auth.resetPassword({ identity: resetState.identity, sa: fd.get("sa"), newPw: fd.get("newPw") }); alert("Password updated"); location.hash = "#/landing"; }
+  catch (err) { alert(err.message); }
+});
+
+// reset (standalone view)
+const resetState2 = { identity: null };
+$id("resetLookupForm2").addEventListener("submit", e => {
+  e.preventDefault(); const idt = new FormData(e.target).get("identity").trim();
+  const u = Auth.findIdentity(idt); if (!u) return alert("No account found");
+  resetState2.identity = (u.username || u.email);
+  $id("sqText2").textContent = `Security question: ${u.sq}`;
+  $id("resetConfirmForm2").classList.remove("hidden");
+});
+$id("resetConfirmForm2").addEventListener("submit", e => {
+  e.preventDefault(); const fd = new FormData(e.target);
+  try { Auth.resetPassword({ identity: resetState2.identity, sa: fd.get("sa"), newPw: fd.get("newPw") }); alert("Password updated"); location.hash = "#/login"; }
+  catch (err) { alert(err.message); }
+});
+
+// search (for now, just filters feed posts by text)
+$("#searchForm").addEventListener("submit", e => e.preventDefault());
+$("#searchInput").addEventListener("input", () => {
+  const q = $("#searchInput").value.trim().toLowerCase();
+  if (location.hash !== "#/feed") return;
+  const list = $id("feedList");
+  [...list.children].forEach(li => {
+    const text = li.textContent.toLowerCase();
+    li.style.display = text.includes(q) ? "" : "none";
+  });
+});
+
+/* =========================
+   Utilities & Init
+========================= */
+function escapeHtml(s){ return s.replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+if (!location.hash) location.hash = "#/landing";
+setNavState();
+handleRoute();
