@@ -4,10 +4,33 @@
   <meta charset="utf-8" />
   <title>ConnectDCCCD • Pseudo Social</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="style.css" />
+  <style>
+  :root{--bg:#0b0e10;--panel:#12171b;--muted:#9aa0a6;--border:#1e242a;--accent:#198754;--danger:#b43b3b}
+  *{box-sizing:border-box}html,body{height:100%}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#e9eef2;
+  background:radial-gradient(1000px 600px at 75% 10%,#11242a55,transparent),var(--bg)}
+  a{color:#8ab4f8;text-decoration:none}a:hover{text-decoration:underline}.muted{color:var(--muted)}
+  .container{max-width:1100px;margin:0 auto;padding:0 16px}.grid-3{display:grid;grid-template-columns:320px 1fr 320px;gap:16px;align-items:start}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.stack{display:grid;gap:12px}.row{display:flex;gap:8px;align-items:center}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;box-shadow:0 8px 30px #00000050}
+  .card.translucent{background:#0f1418cc;backdrop-filter:blur(6px)}
+  .topbar{position:sticky;top:0;z-index:3;background:#0b0e10e6;backdrop-filter:blur(6px);border-bottom:1px solid var(--border)}
+  .topbar .container{display:grid;grid-template-columns:180px 1fr auto;gap:16px;align-items:center}
+  .brand{font-weight:700;color:#9be0ff}.nav{display:flex;gap:18px}.nav a{color:#d7dee4}
+  .nav-right{display:flex;gap:10px;align-items:center}.search{display:flex;gap:8px}
+  .search input{padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:#0b0f14;color:#dfe7ec;width:220px}
+  .search button{display:none}
+  button,.btn{cursor:pointer;border:1px solid var(--border);color:#fff;background:#1a2228;padding:8px 12px;border-radius:8px}
+  .btn:hover{filter:brightness(1.06)}.btn.full{width:100%}.btn.ghost{background:transparent;border-color:var(--border)}
+  .btn.danger{background:#2a1212;border-color:#552323;color:#ffb3b3}
+  input,textarea{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:#0c1116;color:#e9eef2}
+  .view{display:none;padding:22px 0 28px}.view.active{display:block}
+  ul{list-style:none;padding:0;margin:0}.post{background:#0e141a;border:1px solid var(--border);border-radius:10px;padding:12px}
+  .post .meta{color:var(--muted);font-size:12px;margin-bottom:6px;display:flex;gap:8px}
+  .hero h1{margin:0 0 8px}.hero-cta{display:flex;gap:10px;margin-top:8px}
+  @media (max-width:980px){.grid-3{grid-template-columns:1fr}.grid-2{grid-template-columns:1fr}.nav{display:none}.search input{width:140px}}
+  </style>
 </head>
 <body>
-  <!-- Top Navbar -->
   <header class="topbar">
     <div class="container">
       <a class="brand" href="#/feed">ConnectDCCCD</a>
@@ -28,7 +51,6 @@
     </div>
   </header>
 
-  <!-- HERO + three-column layout (left auth, center hero, right change pw) -->
   <section id="view-landing" class="view active">
     <div class="container grid-3">
       <aside class="card">
@@ -56,11 +78,9 @@
 
       <div class="hero card translucent">
         <h1>Dallas College Students & Social Media Platform</h1>
-        <p>
-          Dallas College is one of the largest public, multi-campus community college systems in Texas.
-          It offers a wide range of programs, including associate and bachelor’s degrees, career certificates,
-          and customized training, across multiple physical campuses and online options.
-        </p>
+        <p>Dallas College is one of the largest public, multi-campus community college systems in Texas.
+        It offers a wide range of programs, including associate and bachelor’s degrees, career certificates,
+        and customized training, across multiple physical campuses and online options.</p>
         <div class="hero-cta">
           <a class="btn" data-route="#/feed">Enter Feed</a>
           <a class="btn ghost" data-route="#/about">Learn more</a>
@@ -87,7 +107,6 @@
     </div>
   </section>
 
-  <!-- Main Feed -->
   <section id="view-feed" class="view">
     <div class="container">
       <h2>Main Feed</h2>
@@ -99,7 +118,6 @@
     </div>
   </section>
 
-  <!-- Profile -->
   <section id="view-profile" class="view">
     <div class="container grid-2">
       <div class="card">
@@ -117,7 +135,6 @@
     </div>
   </section>
 
-  <!-- About / Resources (static stubs for now) -->
   <section id="view-about" class="view">
     <div class="container">
       <h2>About</h2>
@@ -136,7 +153,6 @@
     </div>
   </section>
 
-  <!-- Reset standalone view (if navigated directly) -->
   <section id="view-reset" class="view">
     <div class="container">
       <h2>Reset Password</h2>
@@ -156,6 +172,100 @@
     </div>
   </section>
 
-  <script src="script.js"></script>
+  <script>
+  const DB_KEY="psocial_db_v2";
+  const loadDB=()=>JSON.parse(localStorage.getItem(DB_KEY)||'{"users":[],"posts":[],"session":null}');
+  const saveDB=db=>localStorage.setItem(DB_KEY,JSON.stringify(db));
+  const uid=()=>Math.random().toString(36).slice(2,10);
+
+  const Auth={
+    me(){return loadDB().session;},
+    login(identity,password){const db=loadDB();const u=db.users.find(x=>(x.username===identity||x.email===identity)&&x.password===password);
+      if(!u) throw new Error("Invalid credentials"); if(u.deactivated) throw new Error("Account is deactivated");
+      db.session={id:u.id,username:u.username}; saveDB(db);},
+    logout(){const db=loadDB(); db.session=null; saveDB(db);},
+    register({username,email,password,sq,sa}){const db=loadDB();
+      if(db.users.some(u=>u.username===username||u.email===email)) throw new Error("User exists");
+      db.users.push({id:uid(),username,email,password,sq,sa,profile:{displayName:username,bio:""},followers:[],following:[]}); saveDB(db);},
+    findIdentity(id){const db=loadDB(); return db.users.find(u=>u.username===id||u.email===id);},
+    resetPassword({identity,sa,newPw}){const db=loadDB(); const u=db.users.find(x=>x.username===identity||x.email===identity);
+      if(!u) throw new Error("Account not found"); if((u.sa||"").trim().toLowerCase()!==sa.trim().toLowerCase()) throw new Error("Wrong answer");
+      u.password=newPw; saveDB(db);},
+    saveProfile({displayName,bio}){const db=loadDB(); if(!db.session) return; const u=db.users.find(x=>x.id===db.session.id);
+      u.profile.displayName=displayName; u.profile.bio=bio; saveDB(db);}
+  };
+
+  const Posts={
+    create(text){const db=loadDB(); if(!db.session) throw new Error("Not logged in");
+      db.posts.unshift({id:uid(),userId:db.session.id,username:db.session.username,text,likes:[],comments:[],ts:Date.now()}); saveDB(db);},
+    all(){return loadDB().posts;},
+    mine(){const db=loadDB(); return db.session?db.posts.filter(p=>p.userId===db.session.id):[];},
+    like(id){const db=loadDB(); const me=db.session; if(!me) return; const p=db.posts.find(p=>p.id===id); if(!p) return;
+      const i=p.likes.indexOf(me.id); if(i===-1) p.likes.push(me.id); else p.likes.splice(i,1); saveDB(db);},
+    comment(id,text){const db=loadDB(); const me=db.session; if(!me) return; const p=db.posts.find(p=>p.id===id); if(!p) return;
+      p.comments.push({id:uid(),userId:me.id,username:me.username,text,ts:Date.now()}); saveDB(db);},
+    remove(id){const db=loadDB(); db.posts=db.posts.filter(p=>p.id!==id); saveDB(db);}
+  };
+
+  const $=s=>document.querySelector(s), $id=id=>document.getElementById(id), fmt=ts=>new Date(ts).toLocaleString();
+  function show(id){document.querySelectorAll(".view").forEach(v=>v.classList.remove("active")); $id(id).classList.add("active");}
+  function setNavState(){const authed=!!Auth.me(); $("#logoutBtn").style.display=authed?"inline-flex":"none"; $("#loginLink").style.display=authed?"none":"inline-flex";}
+  const routes={"#/feed":()=>{guard();setNavState();show("view-feed");renderFeed();},
+                "#/profile":()=>{guard();setNavState();show("view-profile");renderProfile();},
+                "#/about":()=>{setNavState();show("view-about");},
+                "#/resources":()=>{setNavState();show("view-resources");},
+                "#/login":()=>{setNavState();show("view-landing");},
+                "#/reset":()=>{setNavState();show("view-reset");},
+                "#/landing":()=>{setNavState();show("view-landing");}};
+  function guard(){if(!Auth.me()) location.hash="#/landing";}
+  function handleRoute(){(routes[location.hash]||routes["#/landing"])();}
+  window.addEventListener("hashchange",handleRoute);
+
+  function renderFeed(){const list=$id("feedList"); list.innerHTML="";
+    Posts.all().forEach(p=>{const li=document.createElement("li"); li.className="post";
+      li.innerHTML=`<div class="meta"><strong>@${p.username}</strong> • <span>${fmt(p.ts)}</span></div>
+      <div>${escapeHtml(p.text)}</div>
+      <div class="row" style="margin-top:8px">
+        <button data-like="${p.id}" class="btn">❤ ${p.likes.length}</button>
+        <form data-comment="${p.id}" class="row" style="flex:1"><input name="text" placeholder="Comment..." /></form>
+        <button data-del="${p.id}" class="btn danger">Delete</button></div>
+      <ul class="stack" style="margin-top:8px">${p.comments.map(c=>`<li class="card"><span class="meta"><b>@${c.username}</b> • ${fmt(c.ts)}</span><div>${escapeHtml(c.text)}</div></li>`).join("")}</ul>`;
+      list.appendChild(li);});}
+  function renderProfile(){const db=loadDB(); const me=db.session; if(!me) return; const u=db.users.find(x=>x.id===me.id);
+    const f=$id("profileForm"); f.displayName.value=u.profile.displayName||u.username; f.bio.value=u.profile.bio||"";
+    const mine=$id("myPosts"); mine.innerHTML=""; Posts.mine().forEach(p=>{const li=document.createElement("li"); li.className="post";
+      li.innerHTML=`<div class="meta">${fmt(p.ts)}</div><div>${escapeHtml(p.text)}</div>`; mine.appendChild(li);});}
+
+  document.body.addEventListener("click",e=>{const a=e.target.closest("[data-route]"); if(a) location.hash=a.getAttribute("data-route");});
+  $id("loginForm").addEventListener("submit",e=>{e.preventDefault();const fd=new FormData(e.target);
+    try{Auth.login(fd.get("username").trim(),fd.get("password"));location.hash="#/feed";}catch(err){alert(err.message);}});
+  $("#logoutBtn").addEventListener("click",()=>{Auth.logout();location.hash="#/landing";});
+  $id("registerForm").addEventListener("submit",e=>{e.preventDefault();const fd=new FormData(e.target);
+    try{Auth.register({username:fd.get("username").trim(),email:fd.get("email").trim(),password:fd.get("password"),sq:fd.get("sq"),sa:fd.get("sa")});
+      alert("Account created. Log in now.");location.hash="#/landing";}catch(err){alert(err.message);}});
+  $id("postForm").addEventListener("submit",e=>{e.preventDefault();const fd=new FormData(e.target);
+    try{Posts.create(fd.get("text").trim());e.target.reset();renderFeed();}catch(err){alert(err.message);}});
+  document.body.addEventListener("click",e=>{const like=e.target.closest("[data-like]"); if(like){Posts.like(like.dataset.like);renderFeed();}
+    const del=e.target.closest("[data-del]"); if(del){Posts.remove(del.dataset.del);renderFeed();}});
+  document.body.addEventListener("submit",e=>{if(e.target.matches('form[data-comment]')){e.preventDefault();
+    const fd=new FormData(e.target); const t=(fd.get("text")||"").trim(); if(!t) return; Posts.comment(e.target.getAttribute("data-comment"),t); renderFeed();}});
+  $id("profileForm").addEventListener("submit",e=>{e.preventDefault();const fd=new FormData(e.target);
+    Auth.saveProfile({displayName:fd.get("displayName").trim(),bio:fd.get("bio").trim()}); alert("Profile saved");});
+  const resetState={identity:null}; $id("resetLookupForm").addEventListener("submit",e=>{e.preventDefault();
+    const idt=new FormData(e.target).get("identity").trim(); const u=Auth.findIdentity(idt); if(!u) return alert("No account found");
+    resetState.identity=(u.username||u.email); $id("sqText").textContent=`Security question: ${u.sq}`; $id("resetConfirmForm").classList.remove("hidden");});
+  $id("resetConfirmForm").addEventListener("submit",e=>{e.preventDefault();const fd=new FormData(e.target);
+    try{Auth.resetPassword({identity:resetState.identity,sa:fd.get("sa"),newPw:fd.get("newPw")}); alert("Password updated"); location.hash="#/landing";}catch(err){alert(err.message);}});
+  const resetState2={identity:null}; $id("resetLookupForm2").addEventListener("submit",e=>{e.preventDefault();
+    const idt=new FormData(e.target).get("identity").trim(); const u=Auth.findIdentity(idt); if(!u) return alert("No account found");
+    resetState2.identity=(u.username||u.email); $id("sqText2").textContent=`Security question: ${u.sq}`; $id("resetConfirmForm2").classList.remove("hidden");});
+  $id("resetConfirmForm2").addEventListener("submit",e=>{e.preventDefault();const fd=new FormData(e.target);
+    try{Auth.resetPassword({identity:resetState2.identity,sa:fd.get("sa"),newPw:fd.get("newPw")}); alert("Password updated"); location.hash="#/login";}catch(err){alert(err.message);}});
+  $("#searchForm").addEventListener("submit",e=>e.preventDefault());
+  $("#searchInput").addEventListener("input",()=>{const q=$("#searchInput").value.trim().toLowerCase(); if(location.hash!=="#/feed") return;
+    const list=$id("feedList"); [...list.children].forEach(li=>{li.style.display=li.textContent.toLowerCase().includes(q)?"": "none";});});
+  function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+  if(!location.hash) location.hash="#/landing"; setNavState(); handleRoute();
+  </script>
 </body>
 </html>
