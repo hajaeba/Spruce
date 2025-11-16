@@ -188,25 +188,29 @@
     </div>
   </section>
 
-  <!-- Admin -->
   <section id="view-admin" class="view">
-    <div class="container stack">
-      <div id="reportBlock"></div>
+  <div class="container stack">
+    <div id="reportBlock"></div>
 
-      <h3>Flagged Posts</h3>
-      <ul id="flaggedList" class="stack"></ul>
+    <h3>Flagged Posts</h3>
+    <ul id="flaggedList" class="stack"></ul>
 
-      <h3>Users</h3>
-      <div class="card" style="overflow:auto">
-        <table style="width:100%; border-collapse:collapse">
-          <thead>
-            <tr><th>User</th><th>Status</th><th>Followers</th><th>Following</th><th>Actions</th></tr>
-          </thead>
-          <tbody id="adminUsers"></tbody>
-        </table>
-      </div>
+    <h3>Users</h3>
+    <form id="adminSearchForm" class="row card">
+      <input id="adminSearchInput" placeholder="Search users by username, display name, or email" />
+      <button class="btn">Search</button>
+    </form>
+    <div class="card" style="overflow:auto">
+      <table style="width:100%; border-collapse:collapse">
+        <thead>
+          <tr><th>User</th><th>Status</th><th>Followers</th><th>Following</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="adminUsers"></tbody>
+      </table>
     </div>
-  </section>
+  </div>
+</section>
+
 
   <script src="script.js"></script>
 </body>
