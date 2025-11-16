@@ -316,30 +316,44 @@ function renderSearch(){
 
 function renderAdmin(){
   const db = loadDB();
-  const flagged = db.posts.filter(p => (p.flags||[]).length > 0);
-  $id("flaggedList").innerHTML = flagged.map(p=>`
+
+  // Flagged posts (view flagged content)
+  const flagged = db.posts.filter(p => (p.flags || []).length > 0);
+  $id("flaggedList").innerHTML = flagged.map(p => `
     <li class="card">
       <div class="meta">${userLink(p.username)} • ${fmt(p.ts)}</div>
       <div>${escapeHtml(p.text)}</div>
-      <div class="muted">Flags: ${(p.flags||[]).length}</div>
+      <div class="muted">Flags: ${(p.flags || []).length}</div>
       <div class="row">
-        <button class="btn danger" data-admin-del="${p.id}">Delete post</button>
-        <button class="btn" data-admin-clear="${p.id}">Clear flags</button>
+        <button class="btn danger" data-admin-del="${p.id}">Reject (delete)</button>
+        <button class="btn" data-admin-clear="${p.id}">Approve (keep)</button>
       </div>
     </li>`).join("");
 
-  $id("adminUsers").innerHTML = db.users.map(u=>`
+  // Admin search (search student by name/email)
+  const q = ($id("adminSearchInput")?.value || "").trim().toLowerCase();
+
+  const filteredUsers = db.users.filter(u => {
+    const uname = (u.username || "").toLowerCase();
+    const dname = (u.profile?.displayName || "").toLowerCase();
+    const email = (u.email || "").toLowerCase();
+    return !q || uname.includes(q) || dname.includes(q) || email.includes(q);
+  });
+
+  // Users table (dashboard)
+  $id("adminUsers").innerHTML = filteredUsers.map(u => `
     <tr>
-      <td>${escapeHtml(u.username)} ${u.role==="admin" ? "(admin)" : ""}</td>
+      <td>${escapeHtml(u.username)} ${u.role === "admin" ? "(admin)" : ""}</td>
       <td>${u.deactivated ? "deactivated" : "active"}</td>
-      <td>${u.followers.length}</td>
-      <td>${u.following.length}</td>
+      <td>${(u.followers || []).length}</td>
+      <td>${(u.following || []).length}</td>
       <td class="row">
         <button class="btn" data-admin-toggle="${u.id}">${u.deactivated ? "Reactivate" : "Deactivate"}</button>
         <button class="btn" data-admin-reset="${u.id}">Reset PW</button>
       </td>
     </tr>`).join("");
 
+  // Summary metrics
   const r = Admin.report();
   $id("reportBlock").innerHTML = `
     <div class="card">
@@ -352,6 +366,7 @@ function renderAdmin(){
       <div>Flagged posts: ${r.flaggedPosts}</div>
     </div>`;
 }
+
 
 /* =========================
    Events
@@ -456,6 +471,15 @@ document.body.addEventListener("click", e => {
   const toggle = e.target.closest("[data-admin-toggle]"); if (toggle){ const db = loadDB(); const u = db.users.find(u => u.id === toggle.dataset.adminToggle); Admin.deactivate(u.id, !u.deactivated); renderAdmin(); }
   const reset = e.target.closest("[data-admin-reset]"); if (reset){ const npw = prompt("New password:"); if (npw){ Admin.resetUserPassword(reset.dataset.adminReset, npw); alert("Password reset"); } }
 });
+$id("adminSearchForm")?.addEventListener("submit", e => {
+  e.preventDefault();
+  renderAdmin();
+});
+
+$id("adminSearchInput")?.addEventListener("input", () => {
+  renderAdmin();
+});
+
 
 /* =========================
    Init
