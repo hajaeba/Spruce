@@ -131,12 +131,22 @@ const Admin = {
     db.posts = db.posts.filter(p => p.id !== postId); saveDB(db);
   },
   report() {
-    const db = loadDB();
-    const likes = db.posts.reduce((n, p) => n + p.likes.length, 0);
-    const comments = db.posts.reduce((n, p) => n + p.comments.length, 0);
-    const flagged = db.posts.filter(p => (p.flags || []).length > 0).length;
-    return { users: db.users.length, posts: db.posts.length, likes, comments, logins: db.metrics.logins || 0, flaggedPosts: flagged };
-  },
+  const db = loadDB();
+  const likes = db.posts.reduce((n, p) => n + (p.likes ? p.likes.length : 0), 0);
+  const dislikes = db.posts.reduce((n, p) => n + (p.dislikes ? p.dislikes.length : 0), 0);
+  const comments = db.posts.reduce((n, p) => n + (p.comments ? p.comments.length : 0), 0);
+  const flagged = db.posts.filter(p => (p.flags || []).length > 0).length;
+  return {
+    users: db.users.length,
+    posts: db.posts.length,
+    likes,
+    dislikes,
+    comments,
+    logins: db.metrics.logins || 0,
+    flaggedPosts: flagged
+  };
+},
+
 };
 
 /* =========================
@@ -144,10 +154,21 @@ const Admin = {
 ========================= */
 const Posts = {
   create(text) {
-    const db = loadDB(); if (!db.session) throw new Error("Not logged in");
-    db.posts.unshift({ id: uid(), userId: db.session.id, username: db.session.username, text, likes: [], comments: [], flags: [], ts: Date.now() });
-    saveDB(db);
-  },
+  const db = loadDB(); if (!db.session) throw new Error("Not logged in");
+  db.posts.unshift({
+    id: uid(),
+    userId: db.session.id,
+    username: db.session.username,
+    text,
+    likes: [],
+    dislikes: [],
+    comments: [],
+    flags: [],
+    ts: Date.now()
+  });
+  saveDB(db);
+},
+
   all() { return loadDB().posts; },
   mine() {
     const db = loadDB();
@@ -160,6 +181,25 @@ const Posts = {
     if (i === -1) p.likes.push(me.id); else p.likes.splice(i, 1);
     saveDB(db);
   },
+   dislike(id) {
+  const db = loadDB(); const me = db.session; if (!me) return;
+  const p = db.posts.find(p => p.id === id); if (!p) return;
+  p.likes = p.likes || [];
+  p.dislikes = p.dislikes || [];
+  const di = p.dislikes.indexOf(me.id);
+  if (di === -1) {
+    // add dislike
+    p.dislikes.push(me.id);
+    // remove like if it exists
+    const li = p.likes.indexOf(me.id);
+    if (li !== -1) p.likes.splice(li, 1);
+  } else {
+    // remove dislike (toggle off)
+    p.dislikes.splice(di, 1);
+  }
+  saveDB(db);
+},
+
   comment(id, text) {
     const db = loadDB(); const me = db.session; if (!me) return;
     const p = db.posts.find(p => p.id === id); if (!p) return;
@@ -227,12 +267,15 @@ function renderFeed(){
   const list = $id("feedList"); list.innerHTML = "";
   Posts.all().forEach(p => {
     const canEdit = Auth.me()?.id === p.userId;
+    const likesCount = (p.likes || []).length;
+    const dislikesCount = (p.dislikes || []).length;
     const li = document.createElement("li"); li.className = "post";
     li.innerHTML = `
       <div class="meta"><strong>${userLink(p.username)}</strong> • <span>${fmt(p.ts)}</span></div>
       <div data-post-text="${p.id}">${escapeHtml(p.text)}</div>
       <div class="row" style="margin-top:8px">
-        <button data-like="${p.id}" class="btn">❤ ${p.likes.length}</button>
+        <button data-like="${p.id}" class="btn">❤ ${likesCount}</button>
+        <button data-dislike="${p.id}" class="btn">👎 ${dislikesCount}</button>
         <form data-comment="${p.id}" class="row" style="flex:1"><input name="text" placeholder="Comment..." /></form>
         <button data-flag="${p.id}" class="btn">Flag</button>
         ${canEdit ? `<button data-edit="${p.id}" class="btn">Edit</button>` : ""}
@@ -244,6 +287,7 @@ function renderFeed(){
     list.appendChild(li);
   });
 }
+
 
 function renderProfile(){
   const db = loadDB();
@@ -355,16 +399,18 @@ function renderAdmin(){
 
   // Summary metrics
   const r = Admin.report();
-  $id("reportBlock").innerHTML = `
-    <div class="card">
-      <h3>Activity Report</h3>
-      <div>Users: ${r.users}</div>
-      <div>Posts: ${r.posts}</div>
-      <div>Likes: ${r.likes}</div>
-      <div>Comments: ${r.comments}</div>
-      <div>Logins: ${r.logins}</div>
-      <div>Flagged posts: ${r.flaggedPosts}</div>
-    </div>`;
+$id("reportBlock").innerHTML = `
+  <div class="card">
+    <h3>Activity Report</h3>
+    <div>Users: ${r.users}</div>
+    <div>Posts: ${r.posts}</div>
+    <div>Likes: ${r.likes}</div>
+    <div>Dislikes: ${r.dislikes}</div>
+    <div>Comments: ${r.comments}</div>
+    <div>Logins: ${r.logins}</div>
+    <div>Flagged posts: ${r.flaggedPosts}</div>
+  </div>`;
+
 }
 
 
@@ -397,12 +443,59 @@ $id("postForm").addEventListener("submit", e => {
 });
 
 document.body.addEventListener("click", e => {
-  const like = e.target.closest("[data-like]"); if (like){ Posts.like(like.dataset.like); renderFeed(); }
-  const del = e.target.closest("[data-del]"); if (del){ Posts.remove(del.dataset.del); renderFeed(); }
-  const flag = e.target.closest("[data-flag]"); if (flag){ const reason = prompt("Reason for flag?", "Inappropriate"); if (reason!==null){ Posts.flag(flag.dataset.flag, reason); renderFeed(); } }
-  const edit = e.target.closest("[data-edit]"); if (edit){ const id = edit.dataset.edit; const node = document.querySelector(`[data-post-text="${id}"]`); const current = node?.textContent || ""; const next = prompt("Edit post text:", current); if (next!==null){ try{ Posts.edit(id, next.trim()); renderFeed(); } catch(err){ alert(err.message); } } }
-  const followBtn = e.target.closest("[data-follow]"); if (followBtn){ const targetId = followBtn.dataset.follow; const me = Users.byId(loadDB().session.id); if (me.following.includes(targetId)) Users.unfollow(targetId); else Users.follow(targetId); renderUserFromHash(); }
+  const like = e.target.closest("[data-like]"); 
+  if (like){ 
+    Posts.like(like.dataset.like); 
+    renderFeed(); 
+  }
+
+  const dislike = e.target.closest("[data-dislike]");
+  if (dislike){
+    Posts.dislike(dislike.dataset.dislike);
+    renderFeed();
+  }
+
+  const del = e.target.closest("[data-del]"); 
+  if (del){ 
+    Posts.remove(del.dataset.del); 
+    renderFeed(); 
+  }
+
+  const flag = e.target.closest("[data-flag]"); 
+  if (flag){ 
+    const reason = prompt("Reason for flag?", "Inappropriate"); 
+    if (reason!==null){ 
+      Posts.flag(flag.dataset.flag, reason); 
+      renderFeed(); 
+    } 
+  }
+
+  const edit = e.target.closest("[data-edit]"); 
+  if (edit){ 
+    const id = edit.dataset.edit; 
+    const node = document.querySelector(`[data-post-text="${id}"]`); 
+    const current = node?.textContent || ""; 
+    const next = prompt("Edit post text:", current); 
+    if (next!==null){ 
+      try{ 
+        Posts.edit(id, next.trim()); 
+        renderFeed(); 
+      } catch(err){ 
+        alert(err.message); 
+      } 
+    } 
+  }
+
+  const followBtn = e.target.closest("[data-follow]"); 
+  if (followBtn){ 
+    const targetId = followBtn.dataset.follow; 
+    const me = Users.byId(loadDB().session.id); 
+    if (me.following.includes(targetId)) Users.unfollow(targetId); 
+    else Users.follow(targetId); 
+    renderUserFromHash(); 
+  }
 });
+
 
 document.body.addEventListener("submit", e => {
   if (e.target.matches('form[data-comment]')) {
