@@ -11,19 +11,28 @@
   <header class="topbar">
     <div class="container">
       <a class="brand" href="#/feed">ConnectDCCCD</a>
+
       <nav class="nav">
         <a data-route="#/feed">Home</a>
         <a data-route="#/about">About</a>
         <a data-route="#/resources">Resources</a>
         <a data-route="#/profile">Profile</a>
         <a data-route="#/search">Search</a>
+        <a data-route="#/inbox">Inbox</a>
+        <a data-route="#/notifications">Notifications</a>
+        <a data-route="#/settings">Settings</a>
         <a data-route="#/admin">Admin</a> <!-- visible always; guarded in JS -->
       </nav>
+
       <div class="nav-right">
         <form id="searchForm" class="search">
           <input id="searchInput" placeholder="type to text" />
           <button type="submit">Search</button>
         </form>
+        <button id="themeToggle" class="btn">Light mode</button>
+        <button id="notificationsLink" data-route="#/notifications" class="btn">
+          Alerts <span id="notifBadge" class="badge"></span>
+        </button>
         <button id="loginLink" data-route="#/login" class="btn">Login</button>
         <button id="logoutBtn" class="btn danger">SignOut</button>
       </div>
@@ -92,12 +101,26 @@
   <!-- Feed -->
   <section id="view-feed" class="view">
     <div class="container">
-      <h2>Main Feed</h2>
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <h2 style="margin:0">Main Feed</h2>
+        <div class="row" id="feedControls">
+          <span class="muted">Sort:</span>
+          <select id="feedSort">
+            <option value="new">Newest</option>
+            <option value="likes">Most liked</option>
+            <option value="trending">Trending (likes + comments)</option>
+          </select>
+        </div>
+      </div>
+
       <form id="postForm" class="card row">
         <input name="text" placeholder="What's happening?" required />
         <button class="btn">Post</button>
       </form>
+
       <ul id="feedList" class="stack"></ul>
+
+      <div id="suggestions" class="card" style="margin-top:16px"></div>
     </div>
   </section>
 
@@ -188,29 +211,71 @@
     </div>
   </section>
 
-  <section id="view-admin" class="view">
-  <div class="container stack">
-    <div id="reportBlock"></div>
-
-    <h3>Flagged Posts</h3>
-    <ul id="flaggedList" class="stack"></ul>
-
-    <h3>Users</h3>
-    <form id="adminSearchForm" class="row card">
-      <input id="adminSearchInput" placeholder="Search users by username, display name, or email" />
-      <button class="btn">Search</button>
-    </form>
-    <div class="card" style="overflow:auto">
-      <table style="width:100%; border-collapse:collapse">
-        <thead>
-          <tr><th>User</th><th>Status</th><th>Followers</th><th>Following</th><th>Actions</th></tr>
-        </thead>
-        <tbody id="adminUsers"></tbody>
-      </table>
+  <!-- Inbox -->
+  <section id="view-inbox" class="view">
+    <div class="container">
+      <h2>Inbox</h2>
+      <p class="muted">Private messages you received from other students.</p>
+      <ul id="inboxList" class="stack"></ul>
     </div>
-  </div>
-</section>
+  </section>
 
+  <!-- Notifications -->
+  <section id="view-notifications" class="view">
+    <div class="container">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <h2 style="margin:0">Notifications</h2>
+        <button class="btn" id="markAllReadBtn">Mark all as read</button>
+      </div>
+      <ul id="notificationList" class="stack" style="margin-top:12px"></ul>
+    </div>
+  </section>
+
+  <!-- Account settings -->
+  <section id="view-settings" class="view">
+    <div class="container">
+      <h2>Account settings</h2>
+      <form id="settingsForm" class="card stack">
+        <div>
+          <label>Email</label>
+          <input type="email" name="email" required />
+        </div>
+        <div>
+          <label>Current password</label>
+          <input type="password" name="currentPw" required />
+        </div>
+        <div>
+          <label>New password (leave blank to keep current)</label>
+          <input type="password" name="newPw" />
+        </div>
+        <button class="btn">Save changes</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Admin -->
+  <section id="view-admin" class="view">
+    <div class="container stack">
+      <div id="reportBlock"></div>
+
+      <h3>Flagged Posts</h3>
+      <ul id="flaggedList" class="stack"></ul>
+
+      <h3>Users</h3>
+      <form id="adminSearchForm" class="row card">
+        <input id="adminSearchInput" placeholder="Search users by username, display name, or email" />
+        <button class="btn">Search</button>
+      </form>
+      <div class="card" style="overflow:auto">
+        <table style="width:100%; border-collapse:collapse">
+          <thead>
+            <tr><th>User</th><th>Status</th><th>Followers</th><th>Following</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="adminUsers"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
 
   <script src="script.js"></script>
 </body>
